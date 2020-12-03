@@ -83,6 +83,7 @@ class CPU:
             if IR == "HLT":
                 self.running = False
             if IR == "LDI":
-                pass
+                self.ram_write(operand_a, operand_b)
+                self.PC += 2
             if IR == "PRN":
                 pass
