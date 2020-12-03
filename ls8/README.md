@@ -60,10 +60,31 @@ but you'll have to implement those three above instructions first!
 ## Step 0: IMPORTANT: inventory what is here!
 
 * Make a list of files here.
+
+> List of files:
+> * `cpu.py`
+> * `ls8.py`
+
 * Write a short 3-10-word description of what each file does.
+
+> `cpu.py`:
+>   This file creates a CPU class with `load()` (hardcoded program and incrementing address) , `alu(op, reg_a, reg_b)` (currently with 'ADD' and exception cases) , `trace()` (for help debugging) , and (a completely unwritten) `run()` method(s).
+> <br />
+> <br />
+> `ls8.py`:
+> This file loads and runs `cpu.py`.
+
 * Note what has been implemented, and what hasn't.
+
+> (See above)
+
 * Read this whole file.
+
+> Check
+
 * Skim the spec.
+
+> Check
 
 ## Step 1: Add the constructor to `cpu.py`
 
@@ -153,6 +174,8 @@ the LS-8 spec.
 
 *At this point, you should be able to run the program and have it print `8` to
 the console!*
+
+<!-- ! DAY ! STOP HERE ! -->
 
 ## Step 7: Un-hardcode the machine code
 
