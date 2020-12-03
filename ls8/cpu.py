@@ -10,6 +10,7 @@ class CPU:
         self.bytes = [0] * 256
         self.registers = [0] * 8
         self.running = True
+        self.PC = 0
 
     # *     Memory Address Register == (MAR)
     # *     Memory Data Register == (MDR)
@@ -76,4 +77,12 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        while self.running:
+            IR = register[pc]
+            operand_a, operand_b = register[pc+1], register[pc+2]
+            if IR == "HLT":
+                self.running = False
+            if IR == "LDI":
+                pass
+            if IR == "PRN":
+                pass
