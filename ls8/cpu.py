@@ -11,6 +11,18 @@ class CPU:
         self.registers = [0] * 8
         self.running = True
 
+    # *     Memory Address Register == (MAR)
+    # *     Memory Data Register == (MDR)
+
+    def ram_read(self, MAR):
+        # *     Should return the value listed at the given address in memory
+        return self.registers[MAR]
+
+    def ram_write(self, MAR, MDR):
+        # *     Should write the value to the given address in memory
+        self.registers[MAR] = MDR
+        return None
+
     def load(self):
         """Load a program into memory."""
 
