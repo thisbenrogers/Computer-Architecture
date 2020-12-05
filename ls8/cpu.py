@@ -30,23 +30,32 @@ class CPU:
     def load(self):
         """Load a program into memory."""
 
-        address = 0
+        try:
+            if len(sys.argv) < 2:
+                print(f'Error from {sys.argv[0]}: missing filename argument')
+                print(f'Usage: python3 {sys.argv[0]} <somefilename>')
+                sys.exit(1)
 
-        # For now, we've just hardcoded a program:
+            # add a counter that adds to memory at that index
+            ram_index = 0
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+            with open(sys.argv[1]) as f:
+                for line in f:
+                    split_line = line.split("#")[0]
+                    stripped_split_line = split_line.strip()
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+                    if stripped_split_line != "":
+                        command = int(stripped_split_line, 2)
+
+                        # load command into memory
+                        self.ram[ram_index] = command
+                        print(f'Command in load(): {command}')
+                        ram_index += 1
+                        
+        except FileNotFoundError:
+            print(f'Error from {sys.argv[0]}: {sys.argv[1]} not found')
+            print("(Did you double check the file name?)")
+
 
 
     def alu(self, op, reg_a, reg_b):
