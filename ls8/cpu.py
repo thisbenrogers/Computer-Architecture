@@ -14,17 +14,18 @@ class CPU:
         self.LDI = 0b10000010
         self.PRN = 0b01000111
         self.HLT = 0b00000001
+        self.MUL = 0b10100010
 
     # *     Memory Address Register == (MAR)
     # *     Memory Data Register == (MDR)
 
     def ram_read(self, MAR):
         # *     Should return the value listed at the given address in memory
-        return self.ram[MAR]
+        return self.reg[MAR]
 
     def ram_write(self, MAR, MDR):
         # *     Should write the value to the given address in memory
-        self.ram[MAR] = MDR
+        self.reg[MAR] = MDR
         return None
 
     def load(self):
@@ -46,12 +47,11 @@ class CPU:
 
                     if stripped_split_line != "":
                         command = int(stripped_split_line, 2)
-
+                        
                         # load command into memory
                         self.ram[ram_index] = command
-                        print(f'Command in load(): {command}')
                         ram_index += 1
-                        
+
         except FileNotFoundError:
             print(f'Error from {sys.argv[0]}: {sys.argv[1]} not found')
             print("(Did you double check the file name?)")
@@ -63,7 +63,8 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        if op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -101,4 +102,7 @@ class CPU:
             if IR == self.PRN:
                 print(self.ram_read(operand_a))
                 self.pc += 1
+            if IR == self.MUL:
+                self.alu("MUL", operand_a, operand_b)
+                self.pc += 2
             self.pc += 1
