@@ -1,6 +1,7 @@
 """CPU functionality."""
 
 import sys
+from inspect import signature
 
 class CPU:
     """Main CPU class."""
@@ -15,11 +16,29 @@ class CPU:
         self.PRN = 0b01000111
         self.HLT = 0b00000001
         self.MUL = 0b10100010
-        
 
+        self.breaktable = {}
+        self.breaktable[self.HLT] = self.handle_HLT
+        self.breaktable[self.LDI] = self.handle_LDI
+        self.breaktable[self.PRN] = self.handle_PRN
+        self.breaktable[self.MUL] = self.handle_MUL
+
+    def handle_HLT(self):
+        self.running = False
+        return None
+
+    def handle_LDI(self, op_a, op_b):
+        self.ram_write(op_a, op_b)
+        return None
+
+    def handle_PRN(self, op_a):
+        print(self.ram_read(op_a))
+
+    def handle_MUL(self, op_a, op_b):
+        self.alu("MUL", op_a, op_b)
+    
     # *     Memory Address Register == (MAR)
     # *     Memory Data Register == (MDR)
-
     def ram_read(self, MAR):
         # *     Should return the value listed at the given address in memory
         return self.reg[MAR]
@@ -57,8 +76,6 @@ class CPU:
             print(f'Error from {sys.argv[0]}: {sys.argv[1]} not found')
             print("(Did you double check the file name?)")
 
-
-
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
@@ -95,14 +112,23 @@ class CPU:
             IR = self.ram[self.pc]
             operand_a = self.ram[self.pc + 1]
             operand_b = self.ram[self.pc + 2]
-            if IR == self.HLT:
-                self.running = False
-            if IR == self.LDI:
-                self.ram_write(operand_a, operand_b)
-            if IR == self.PRN:
-                print(self.ram_read(operand_a))
-            if IR == self.MUL:
-                self.alu("MUL", operand_a, operand_b)
+
+            # *     Finding out how many arguments to pass the breaktable functions
+            sig = signature(self.breaktable[IR])
+            params = sig.parameters
+            num_params = len(params)
+
+            # *     Calls the function with the appropriate num of args
+            if num_params == 0:
+                self.breaktable[IR]()
+            if num_params == 1:
+                self.breaktable[IR](operand_a)
+            if num_params >= 2:
+                self.breaktable[IR](operand_a, operand_b)
+
+            # *     Determines increment of self.pc based on a bitshifting of the command
+            # *         (The binary representation of each command 
+            # *         has the number of args built into it's first 2 registers)
             number_of_operands = IR >> 6
             self.pc += (1 + number_of_operands)
 
