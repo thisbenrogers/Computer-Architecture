@@ -15,6 +15,7 @@ class CPU:
         self.PRN = 0b01000111
         self.HLT = 0b00000001
         self.MUL = 0b10100010
+        
 
     # *     Memory Address Register == (MAR)
     # *     Memory Data Register == (MDR)
@@ -98,11 +99,10 @@ class CPU:
                 self.running = False
             if IR == self.LDI:
                 self.ram_write(operand_a, operand_b)
-                self.pc += 2
             if IR == self.PRN:
                 print(self.ram_read(operand_a))
-                self.pc += 1
             if IR == self.MUL:
                 self.alu("MUL", operand_a, operand_b)
-                self.pc += 2
-            self.pc += 1
+            number_of_operands = IR >> 6
+            self.pc += (1 + number_of_operands)
+
