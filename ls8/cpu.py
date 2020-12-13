@@ -8,20 +8,28 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.ram = [0] * 256
+        # *     registers, R0-R7
         self.reg = [0] * 8
+        # *     set Stack pointer
+        self.reg[7] = 0xF4
+        self.ram = [0] * 256
         self.running = True
+        # *     program counter
         self.pc = 0
         self.LDI = 0b10000010
         self.PRN = 0b01000111
         self.HLT = 0b00000001
         self.MUL = 0b10100010
+        self.POP = 0b01000110
+        self.PUSH = 0b01000101
 
         self.breaktable = {}
         self.breaktable[self.HLT] = self.handle_HLT
         self.breaktable[self.LDI] = self.handle_LDI
         self.breaktable[self.PRN] = self.handle_PRN
         self.breaktable[self.MUL] = self.handle_MUL
+        self.breaktable[self.POP] = self.handle_POP
+        self.breaktable[self.PUSH] = self.handle_PUSH
 
     def handle_HLT(self):
         self.running = False
@@ -37,6 +45,36 @@ class CPU:
     def handle_MUL(self, op_a, op_b):
         self.alu("MUL", op_a, op_b)
     
+    def handle_POP(self):
+        # *     stack pointer
+        sp = self.reg[7]
+
+        # *     value from memory at pointed address
+        value = self.ram[sp]
+
+        # *     target reg address
+        reg_address = self.ram[self.pc + 1]
+
+        # *     write the value to the register
+        self.reg[reg_address] = value
+
+        # *     increment the stack pointer
+        self.reg[7] += 1
+
+    def handle_PUSH(self):
+        # *     decrement stack pointer
+        self.reg[7] -= 1
+
+        # *     get register address
+        reg_address = self.ram[self.pc + 1]
+
+        # *     get value from register address
+        value = self.reg[reg_address]
+
+        # *     copy to top of stack
+        sp = self.reg[7]
+        self.ram[sp] = value
+
     # *     Memory Address Register == (MAR)
     # *     Memory Data Register == (MDR)
     def ram_read(self, MAR):
@@ -109,6 +147,7 @@ class CPU:
     def run(self):
         """Run the CPU."""
         while self.running:
+            # *     creates variable for the current and next binary values from self.ram
             IR = self.ram[self.pc]
             operand_a = self.ram[self.pc + 1]
             operand_b = self.ram[self.pc + 2]
@@ -128,7 +167,7 @@ class CPU:
 
             # *     Determines increment of self.pc based on a bitshifting of the command
             # *         (The binary representation of each command 
-            # *         has the number of args built into it's first 2 registers)
+            # *         has the number of args built into its first 2 registers)
             number_of_operands = IR >> 6
             self.pc += (1 + number_of_operands)
 
