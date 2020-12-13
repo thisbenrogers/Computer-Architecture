@@ -20,14 +20,18 @@ class CPU:
         self.PRN = 0b01000111
         self.HLT = 0b00000001
         self.MUL = 0b10100010
+        self.DIV = 0b10100011
         self.POP = 0b01000110
         self.PUSH = 0b01000101
+        self.CALL = 0b01010000
+        self.RET = 0b00010001
 
         self.breaktable = {}
         self.breaktable[self.HLT] = self.handle_HLT
         self.breaktable[self.LDI] = self.handle_LDI
         self.breaktable[self.PRN] = self.handle_PRN
         self.breaktable[self.MUL] = self.handle_MUL
+        self.breaktable[self.DIV] = self.handle_DIV
         self.breaktable[self.POP] = self.handle_POP
         self.breaktable[self.PUSH] = self.handle_PUSH
 
@@ -45,6 +49,9 @@ class CPU:
     def handle_MUL(self, op_a, op_b):
         self.alu("MUL", op_a, op_b)
     
+    def handle_DIV(self, op_a, op_b):
+        self.alu("DIV", op_a, op_b)
+
     def handle_POP(self):
         # *     stack pointer
         sp = self.reg[7]
@@ -121,6 +128,8 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         if op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        if op == "DIV":
+            self.reg[reg_a] /= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
