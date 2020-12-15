@@ -34,13 +34,15 @@ class CPU:
         self.breaktable[self.DIV] = self.handle_DIV
         self.breaktable[self.POP] = self.handle_POP
         self.breaktable[self.PUSH] = self.handle_PUSH
+        self.breaktable[self.CALL] = self.handle_CALL
+        self.breaktable[self.RET] = self.handle_RET
 
     def handle_HLT(self):
         self.running = False
         return None
 
     def handle_LDI(self, op_a, op_b):
-        self.ram_write(op_a, op_b)
+        self.reg[op_a] = op_b
         return None
 
     def handle_PRN(self, op_a):
@@ -82,15 +84,34 @@ class CPU:
         sp = self.reg[7]
         self.ram[sp] = value
 
+    def handle_CALL(self, reg_num):
+        # *     Push the return address onto the Stack
+        ret_addr = self.pc + 2
+        self.reg[7] -= 1
+        stack_pointer = self.reg[7]
+        self.ram_write(stack_pointer, ret_addr)
+        # *     Jump, set the PC to wherever the register says
+        address_jump = self.reg[reg_num]
+        print(f'reg_num: {reg_num}, and address_jump: {address_jump}')
+        self.pc = address_jump - 2
+        print(f'self.pc: {self.pc}')
+
+    def handle_RET(self):
+        stack_pointer = self.reg[7]
+        return_address = self.ram[stack_pointer]
+        self.reg[7] += 1
+        self.pc = return_address
+
+
     # *     Memory Address Register == (MAR)
     # *     Memory Data Register == (MDR)
     def ram_read(self, MAR):
         # *     Should return the value listed at the given address in memory
-        return self.reg[MAR]
+        return self.ram[MAR]
 
     def ram_write(self, MAR, MDR):
         # *     Should write the value to the given address in memory
-        self.reg[MAR] = MDR
+        self.ram[MAR] = MDR
         return None
 
     def load(self):
@@ -112,7 +133,7 @@ class CPU:
 
                     if stripped_split_line != "":
                         command = int(stripped_split_line, 2)
-                        
+                        print(f'command: {command}')
                         # load command into memory
                         self.ram[ram_index] = command
                         ram_index += 1
@@ -160,6 +181,8 @@ class CPU:
             IR = self.ram[self.pc]
             operand_a = self.ram[self.pc + 1]
             operand_b = self.ram[self.pc + 2]
+
+            print(f'IR: {IR}')
 
             # *     Finding out how many arguments to pass the breaktable functions
             sig = signature(self.breaktable[IR])
