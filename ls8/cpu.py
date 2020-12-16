@@ -30,6 +30,8 @@ class CPU:
         self.RET = 0b00010001
         self.CMP = 0b10100111
         self.JMP = 0b01010100
+        self.JEQ = 0b01010101
+        self.JNE = 0b01010110
 
         self.breaktable = {}
         self.breaktable[self.HLT] = self.handle_HLT
@@ -44,6 +46,8 @@ class CPU:
         self.breaktable[self.RET] = self.handle_RET
         self.breaktable[self.CMP] = self.handle_CMP
         self.breaktable[self.JMP] = self.handle_JMP
+        self.breaktable[self.JEQ] = self.handle_JEQ
+        self.breaktable[self.JNE] = self.handle_JNE
 
     def handle_HLT(self):
         self.running = False
@@ -51,6 +55,7 @@ class CPU:
 
     def handle_LDI(self, op_a, op_b):
         self.reg[op_a] = op_b
+        print(f'self.reg in handle_LDI: {self.reg}')
         return None
 
     def handle_PRN(self, op_a):
@@ -116,6 +121,17 @@ class CPU:
 
     def handle_JMP(self, reg_addr):
         self.pc = self.reg[reg_addr]
+
+    def handle_JEQ(self, reg_addr):
+        # print('inside handle_JEQ')
+        if self.FL == 0b00000001:
+            self.pc = self.reg[reg_addr]
+        return None
+
+    def handle_JNE(self, reg_addr):
+        if self.FL == 0b00000010 or self.FL == 0b00000100:
+            self.pc = self.reg[reg_addr]
+        return None
 
 
     # *     Memory Address Register == (MAR)
@@ -204,6 +220,7 @@ class CPU:
             operand_a = self.ram[self.pc + 1]
             operand_b = self.ram[self.pc + 2]
 
+            # print(f'IR in run: {IR}')
 
             # *     Finding out how many arguments to pass the breaktable functions
             sig = signature(self.breaktable[IR])
@@ -221,7 +238,7 @@ class CPU:
             # *     Determines increment of self.pc based on a bitshifting of the command
             # *         (The binary representation of each command 
             # *         has the number of args built into its first 2 registers)
-            if IR != 0b01010000 and IR != 0b00010001 and IR != 0b01010100:
+            if IR != 0b01010000 and IR != 0b00010001 and IR != 0b01010100 and IR != 0b01010101 and IR != 0b01010110:
                 number_of_operands = IR >> 6
                 self.pc += (1 + number_of_operands)
 
