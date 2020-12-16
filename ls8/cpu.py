@@ -16,9 +16,10 @@ class CPU:
         self.running = True
         # *     program counter
         self.pc = 0
+        self.HLT = 0b00000001
         self.LDI = 0b10000010
         self.PRN = 0b01000111
-        self.HLT = 0b00000001
+        self.ADD = 0b10100000
         self.MUL = 0b10100010
         self.DIV = 0b10100011
         self.POP = 0b01000110
@@ -30,6 +31,7 @@ class CPU:
         self.breaktable[self.HLT] = self.handle_HLT
         self.breaktable[self.LDI] = self.handle_LDI
         self.breaktable[self.PRN] = self.handle_PRN
+        self.breaktable[self.ADD] = self.handle_ADD
         self.breaktable[self.MUL] = self.handle_MUL
         self.breaktable[self.DIV] = self.handle_DIV
         self.breaktable[self.POP] = self.handle_POP
@@ -46,10 +48,13 @@ class CPU:
         return None
 
     def handle_PRN(self, op_a):
-        print(self.ram_read(op_a))
+        print(self.reg[op_a])
 
     def handle_MUL(self, op_a, op_b):
         self.alu("MUL", op_a, op_b)
+
+    def handle_ADD(self, op_a, op_b):
+        self.alu("ADD", op_a, op_b)
     
     def handle_DIV(self, op_a, op_b):
         self.alu("DIV", op_a, op_b)
@@ -92,9 +97,7 @@ class CPU:
         self.ram_write(stack_pointer, ret_addr)
         # *     Jump, set the PC to wherever the register says
         address_jump = self.reg[reg_num]
-        print(f'reg_num: {reg_num}, and address_jump: {address_jump}')
-        self.pc = address_jump - 2
-        print(f'self.pc: {self.pc}')
+        self.pc = address_jump
 
     def handle_RET(self):
         stack_pointer = self.reg[7]
@@ -133,7 +136,7 @@ class CPU:
 
                     if stripped_split_line != "":
                         command = int(stripped_split_line, 2)
-                        print(f'command: {command}')
+                        # print(f'command: {command}')
                         # load command into memory
                         self.ram[ram_index] = command
                         ram_index += 1
@@ -147,9 +150,9 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        if op == "MUL":
+        elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
-        if op == "DIV":
+        elif op == "DIV":
             self.reg[reg_a] /= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
@@ -182,7 +185,6 @@ class CPU:
             operand_a = self.ram[self.pc + 1]
             operand_b = self.ram[self.pc + 2]
 
-            print(f'IR: {IR}')
 
             # *     Finding out how many arguments to pass the breaktable functions
             sig = signature(self.breaktable[IR])
@@ -200,6 +202,7 @@ class CPU:
             # *     Determines increment of self.pc based on a bitshifting of the command
             # *         (The binary representation of each command 
             # *         has the number of args built into its first 2 registers)
-            number_of_operands = IR >> 6
-            self.pc += (1 + number_of_operands)
+            if IR != 0b01010000 and IR != 0b00010001:
+                number_of_operands = IR >> 6
+                self.pc += (1 + number_of_operands)
 
