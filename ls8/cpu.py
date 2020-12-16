@@ -14,8 +14,10 @@ class CPU:
         self.reg[7] = 0xF4
         self.ram = [0] * 256
         self.running = True
+        self.FL = 0b00000000
         # *     program counter
         self.pc = 0
+        # *     program commands
         self.HLT = 0b00000001
         self.LDI = 0b10000010
         self.PRN = 0b01000111
@@ -26,6 +28,8 @@ class CPU:
         self.PUSH = 0b01000101
         self.CALL = 0b01010000
         self.RET = 0b00010001
+        self.CMP = 0b10100111
+        self.JMP = 0b01010100
 
         self.breaktable = {}
         self.breaktable[self.HLT] = self.handle_HLT
@@ -38,6 +42,8 @@ class CPU:
         self.breaktable[self.PUSH] = self.handle_PUSH
         self.breaktable[self.CALL] = self.handle_CALL
         self.breaktable[self.RET] = self.handle_RET
+        self.breaktable[self.CMP] = self.handle_CMP
+        self.breaktable[self.JMP] = self.handle_JMP
 
     def handle_HLT(self):
         self.running = False
@@ -105,6 +111,12 @@ class CPU:
         self.reg[7] += 1
         self.pc = return_address
 
+    def handle_CMP(self, reg_a, reg_b):
+        self.alu("CMP", reg_a, reg_b)
+
+    def handle_JMP(self, reg_addr):
+        self.pc = self.reg[reg_addr]
+
 
     # *     Memory Address Register == (MAR)
     # *     Memory Data Register == (MDR)
@@ -154,6 +166,13 @@ class CPU:
             self.reg[reg_a] *= self.reg[reg_b]
         elif op == "DIV":
             self.reg[reg_a] /= self.reg[reg_b]
+        elif op == "CMP":
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.FL == 0b00000001
+            if self.reg[reg_a] > self.reg[reg_b]:
+                self.FL == 0b00000010
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.FL == 0b00000100
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -202,7 +221,7 @@ class CPU:
             # *     Determines increment of self.pc based on a bitshifting of the command
             # *         (The binary representation of each command 
             # *         has the number of args built into its first 2 registers)
-            if IR != 0b01010000 and IR != 0b00010001:
+            if IR != 0b01010000 and IR != 0b00010001 and IR != 0b01010100:
                 number_of_operands = IR >> 6
                 self.pc += (1 + number_of_operands)
 
