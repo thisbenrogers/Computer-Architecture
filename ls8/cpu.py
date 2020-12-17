@@ -55,20 +55,23 @@ class CPU:
 
     def handle_LDI(self, op_a, op_b):
         self.reg[op_a] = op_b
-        print(f'self.reg in handle_LDI: {self.reg}')
         return None
 
     def handle_PRN(self, op_a):
         print(self.reg[op_a])
+        return None
 
     def handle_MUL(self, op_a, op_b):
         self.alu("MUL", op_a, op_b)
+        return None
 
     def handle_ADD(self, op_a, op_b):
         self.alu("ADD", op_a, op_b)
+        return None
     
     def handle_DIV(self, op_a, op_b):
         self.alu("DIV", op_a, op_b)
+        return None
 
     def handle_POP(self):
         # *     stack pointer
@@ -85,6 +88,7 @@ class CPU:
 
         # *     increment the stack pointer
         self.reg[7] += 1
+        return None
 
     def handle_PUSH(self):
         # *     decrement stack pointer
@@ -99,6 +103,7 @@ class CPU:
         # *     copy to top of stack
         sp = self.reg[7]
         self.ram[sp] = value
+        return None
 
     def handle_CALL(self, reg_num):
         # *     Push the return address onto the Stack
@@ -109,28 +114,35 @@ class CPU:
         # *     Jump, set the PC to wherever the register says
         address_jump = self.reg[reg_num]
         self.pc = address_jump
+        return None
 
     def handle_RET(self):
         stack_pointer = self.reg[7]
         return_address = self.ram[stack_pointer]
         self.reg[7] += 1
         self.pc = return_address
+        return None
 
     def handle_CMP(self, reg_a, reg_b):
         self.alu("CMP", reg_a, reg_b)
+        return None
 
     def handle_JMP(self, reg_addr):
         self.pc = self.reg[reg_addr]
+        return None
 
     def handle_JEQ(self, reg_addr):
-        # print('inside handle_JEQ')
         if self.FL == 0b00000001:
             self.pc = self.reg[reg_addr]
+        else:
+            self.pc += 2
         return None
 
     def handle_JNE(self, reg_addr):
         if self.FL == 0b00000010 or self.FL == 0b00000100:
             self.pc = self.reg[reg_addr]
+        else:
+            self.pc += 2
         return None
 
 
@@ -184,11 +196,13 @@ class CPU:
             self.reg[reg_a] /= self.reg[reg_b]
         elif op == "CMP":
             if self.reg[reg_a] == self.reg[reg_b]:
-                self.FL == 0b00000001
-            if self.reg[reg_a] > self.reg[reg_b]:
-                self.FL == 0b00000010
-            if self.reg[reg_a] < self.reg[reg_b]:
-                self.FL == 0b00000100
+                self.FL = 0b00000001
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.FL = 0b00000010
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.FL = 0b00000100
+            else:
+                self.FL = 0b00000000
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -235,10 +249,12 @@ class CPU:
             if num_params >= 2:
                 self.breaktable[IR](operand_a, operand_b)
 
-            # *     Determines increment of self.pc based on a bitshifting of the command
+            # *     Determines increment of self.pc based on a bitshifting of the command,
+            # *     Unless the IR command handles self.pc internally
             # *         (The binary representation of each command 
             # *         has the number of args built into its first 2 registers)
             if IR != 0b01010000 and IR != 0b00010001 and IR != 0b01010100 and IR != 0b01010101 and IR != 0b01010110:
                 number_of_operands = IR >> 6
                 self.pc += (1 + number_of_operands)
+        return None
 
